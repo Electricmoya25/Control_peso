@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reto Pedro -10kg</title>
+    <style>
+        body { font-family: sans-serif; background: #f4f4f9; padding: 20px; color: #333; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 500px; margin: auto; }
+        h2 { color: #2c3e50; text-align: center; }
+        .status { padding: 15px; border-radius: 8px; text-align: center; font-weight: bold; margin-bottom: 20px; }
+        .verde { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .rojo { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        input, button { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box;}
+        button { background: #3498db; color: white; cursor: pointer; border: none; font-weight: bold; font-size: 16px;}
+        .warning { color: #e67e22; font-size: 0.9em; font-weight: bold; margin-top: 10px; display: block; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>🎯 Objetivo Pedro: 86.45 kg (Junio)</h2>
+    <div id="statusBox" class="status verde">Estado actual: Esperando datos...</div>
+    
+    <label>Peso Actual (kg):</label>
+    <input type="number" id="pesoInput" step="0.01" placeholder="Ej: 96.45">
+    
+    <label>Días de ejercicio esta semana:</label>
+    <input type="number" id="ejercicioInput" placeholder="Ej: 3">
+    
+    <button onclick="calcular()">Registrar y Enviar a Drive</button>
+
+    <span id="alertaEjercicio" class="warning"></span>
+</div>
+
+<script>
+    function calcular() {
+        const peso = parseFloat(document.getElementById('pesoInput').value);
+        const ejercicio = parseInt(document.getElementById('ejercicioInput').value);
+        const statusBox = document.getElementById('statusBox');
+        const alertaEj = document.getElementById('alertaEjercicio');
+        
+        // --- PEGA AQUÍ TU URL DE GOOGLE APPS SCRIPT ---
+        const urlScript = "https://script.google.com/macros/s/AKfycbwvJCQk33HrLSOOzBf8LvP-1YnT2ODXnki77-VbJpGouAbRs2_ob45zDh2aKKk59zPecg/exec"; 
+
+        if(!peso || isNaN(ejercicio)) {
+            alert("Por favor, rellena los dos campos.");
+            return;
+        }
+
+        if(peso <= 95.5) { 
+            statusBox.className = "status verde";
+            statusBox.innerText = "¡OBJETIVO EN VERDE! Estás bajando de peso. Sigue así.";
+        } else {
+            statusBox.className = "status rojo";
+            statusBox.innerText = "EN ROJO: Toca apretar un poco esta semana.";
+        }
+
+        if(ejercicio < 3) {
+            alertaEj.innerText = "⚠️ ¡Pedro, hay que moverse más! Mínimo 3 días.";
+        } else {
+            alertaEj.innerText = "✅ ¡Buen ritmo de entrenamiento!";
+        }
+
+        fetch(urlScript, {
+            method: 'POST',
+            mode: 'no-cors',
+            body: JSON.stringify({ peso: peso, ejercicio: ejercicio })
+        }).then(() => {
+            alert("¡Registro guardado con éxito en tu Google Sheets!");
+        }).catch(err => {
+            console.error("Error al guardar: ", err);
+        });
+    }
+</script>
+</body>
+</html>

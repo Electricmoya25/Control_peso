@@ -15,7 +15,7 @@
         
         .header { background: #2c3e50; color: white; padding: 20px; text-align: center; }
         .tabs { display: flex; background: #34495e; cursor: pointer; }
-        .tab { flex: 1; padding: 15px; text-align: center; color: white; font-weight: bold; transition: 0.3s; }
+        .tab { flex: 1; padding: 15px; text-align: center; color: white; font-weight: bold; transition: 0.3s; font-size: 14px;}
         .tab:hover, .tab.active { background: #3498db; }
         .content { padding: 20px; display: none; }
         .content.active { display: block; }
@@ -30,15 +30,18 @@
         .btn-sync:hover { background: #e67e22; }
         .card-stat { background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 5px solid #3498db; margin-bottom: 15px; }
         .alert { padding: 10px; border-radius: 6px; margin-top: 10px; font-weight: bold; text-align: center; display: none;}
-        .diet-list { padding-left: 20px; }
-        .diet-list li { margin-bottom: 10px; }
+        
+        /* ESTILOS DE LA DIETA */
+        .day-card { background: #fdfdfd; border: 1px solid #eee; border-radius: 8px; padding: 15px; margin-bottom: 15px; border-left: 5px solid #27ae60;}
+        .day-title { font-weight: bold; color: #2c3e50; margin-top: 0; border-bottom: 2px solid #eee; padding-bottom: 5px; text-transform: uppercase;}
+        .meal { margin: 8px 0; font-size: 14px; }
+        .meal strong { color: #e67e22; }
     </style>
 </head>
 <body>
 
 <div id="loginScreen">
-    <h2 style="color: #2c3e50;">🔒 Acceso Restringido</h2>
-    <p>Introduce tus credenciales</p>
+    <h2 style="color: #2c3e50;">🔒 Acceso App Pedro</h2>
     <input type="text" id="usuario" placeholder="Usuario">
     <input type="password" id="password" placeholder="Contraseña">
     <button onclick="verificarLogin()">Entrar</button>
@@ -54,7 +57,7 @@
     <div class="tabs">
         <div class="tab active" onclick="switchTab('registro')">📝 Registro</div>
         <div class="tab" onclick="switchTab('estadisticas')">📊 Estadísticas</div>
-        <div class="tab" onclick="switchTab('dieta')">🥗 Mi Dieta</div>
+        <div class="tab" onclick="switchTab('dieta')">🥗 Mi Dieta (16:8)</div>
     </div>
 
     <div id="registro" class="content active">
@@ -82,22 +85,63 @@
         </div>
     </div>
 
-    <div id="dieta" class="content">
-        <h3>⏱️ Ayuno 16:8 (Comes de 10:00 a 18:00)</h3>
-        <ul class="diet-list">
-            <li><strong>10:00h (Romper Ayuno):</strong> Huevos revueltos, yogur griego con nueces, o tostada 100% integral. Café.</li>
-            <li><strong>14:00h (Comida Fuerte):</strong> Ensalada/Verdura + Proteína (Pollo/Ternera/Pescado) + 1 cda Aceite Oliva.</li>
-            <li><strong>17:15h (Cena Ligera):</strong> Pescado blanco al horno o tortilla. A las 18:00h se cierra la cocina.</li>
-            <li><strong>18:30h:</strong> 🏃‍♂️ Salida a correr (Método CACO: Caminar-Correr).</li>
-        </ul>
-        <hr>
-        <p style="color: #c0392b;"><strong>🚫 PROHIBIDO:</strong> Alcohol, refrescos, pan blanco, bollería y fritos.</p>
+    <div id="dieta" class="content" style="max-height: 500px; overflow-y: auto;">
+        <p style="font-size: 14px; color: #555;"><strong>Regla de Oro:</strong> Come solo entre las 10:00 y las 18:00. Fuera de esa hora, solo agua, infusiones o café solo.</p>
+        
+        <div class="day-card">
+            <h4 class="day-title">Lunes</h4>
+            <div class="meal"><strong>10:00 (Desayuno):</strong> 2 huevos revueltos con espinacas y café solo.</div>
+            <div class="meal"><strong>14:00 (Comida):</strong> Pechuga de pollo a la plancha con ensalada mixta y 1/2 aguacate.</div>
+            <div class="meal"><strong>17:15 (Cena):</strong> Salmón al horno o a la plancha con brócoli al vapor.</div>
+        </div>
+
+        <div class="day-card">
+            <h4 class="day-title">Martes</h4>
+            <div class="meal"><strong>10:00 (Desayuno):</strong> Yogur griego natural con un puñado de nueces. Café o Té.</div>
+            <div class="meal"><strong>14:00 (Comida):</strong> Lentejas con verduras (zanahoria, cebolla, pimiento - sin chorizo).</div>
+            <div class="meal"><strong>17:15 (Cena):</strong> Tortilla francesa de 2 huevos con una lata de atún al natural.</div>
+        </div>
+
+        <div class="day-card">
+            <h4 class="day-title">Miércoles</h4>
+            <div class="meal"><strong>10:00 (Desayuno):</strong> Tostada (pan 100% integral) con tomate triturado y lonchas de pavo.</div>
+            <div class="meal"><strong>14:00 (Comida):</strong> Merluza a la plancha con espárragos trigueros y 1 patata cocida.</div>
+            <div class="meal"><strong>17:15 (Cena):</strong> Tiras de pavo salteadas con pimientos y cebolla.</div>
+        </div>
+
+        <div class="day-card">
+            <h4 class="day-title">Jueves</h4>
+            <div class="meal"><strong>10:00 (Desayuno):</strong> Bol de avena cocida (porridge) con canela y almendras crudas.</div>
+            <div class="meal"><strong>14:00 (Comida):</strong> Filete de ternera magra a la plancha con buena ración de judías verdes.</div>
+            <div class="meal"><strong>17:15 (Cena):</strong> Revuelto de champiñones y gambas peladas (1 huevo + 2 claras).</div>
+        </div>
+
+        <div class="day-card">
+            <h4 class="day-title">Viernes</h4>
+            <div class="meal"><strong>10:00 (Desayuno):</strong> 2 huevos cocidos con rodajas de tomate y un chorrito de aceite.</div>
+            <div class="meal"><strong>14:00 (Comida):</strong> Ensalada de garbanzos, pepino, tomate, cebolla y huevo duro.</div>
+            <div class="meal"><strong>17:15 (Cena):</strong> Lubina o dorada al horno con rodajas de calabacín asado.</div>
+        </div>
+
+        <div class="day-card">
+            <h4 class="day-title">Sábado</h4>
+            <div class="meal"><strong>10:00 (Desayuno):</strong> Tostada 100% integral con medio aguacate y queso fresco.</div>
+            <div class="meal"><strong>14:00 (Comida):</strong> Pollo asado (sin comer la piel) con ensalada verde variada.</div>
+            <div class="meal"><strong>17:15 (Cena):</strong> Sepia a la plancha con ajo y perejil, acompañada de tomate picado.</div>
+        </div>
+
+        <div class="day-card">
+            <h4 class="day-title">Domingo</h4>
+            <div class="meal"><strong>10:00 (Desayuno):</strong> Tortilla de 2 huevos con champiñones. Café.</div>
+            <div class="meal"><strong>14:00 (Comida):</strong> Arroz integral (ración moderada) con calamares o marisco.</div>
+            <div class="meal"><strong>17:15 (Cena):</strong> Ventresca de atún escurrida sobre una cama de rúcula y tomates cherry.</div>
+        </div>
     </div>
 </div>
 
 <script>
-    // --- PEGA AQUÍ TU NUEVA URL DE GOOGLE APPS SCRIPT ---
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxIuczp7jsWiEsfmaJBi0nf7iWc62g4qLqWQtYQYxxsWckCBCCoZNW-IZOGrgLi553JlA/exec"; 
+    // --- PEGA AQUÍ TU URL DE GOOGLE APPS SCRIPT ---
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxIuczp7jsWiEsfmaJBi0nf7iWc62g4qLqWQtYQYxxsWckCBCCoZNW-IZOGrgLi553JlA/exec""; 
     
     let historial = [];
     let chartInstance = null;
@@ -125,7 +169,7 @@
         event.currentTarget.classList.add('active');
     }
 
-    // Guardar (solo envía a la nube, no guarda local)
+    // Guardar en Drive
     function guardarDatos() {
         const fechaActual = new Date().toISOString().split('T')[0]; 
         const peso = parseFloat(document.getElementById('pesoInput').value);
@@ -159,7 +203,7 @@
         });
     }
 
-    // Descargar datos de Drive y actualizar gráfica
+    // Descargar de Drive
     function cargarDatosDesdeDrive() {
         const btn = document.getElementById('btnSync');
         btn.innerText = "⏳ Descargando datos...";
@@ -180,7 +224,7 @@
             });
     }
 
-    // Calcular estadísticas
+    // Actualizar Gráfico
     function actualizarEstadisticas() {
         if(historial.length === 0) return;
 

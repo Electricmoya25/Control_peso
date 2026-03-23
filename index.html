@@ -2,73 +2,182 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Reto Pedro -10kg</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Pedro -10kg</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: sans-serif; background: #f4f4f9; padding: 20px; color: #333; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 500px; margin: auto; }
-        h2 { color: #2c3e50; text-align: center; }
-        .status { padding: 15px; border-radius: 8px; text-align: center; font-weight: bold; margin-bottom: 20px; }
-        .verde { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .rojo { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        input, button { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box;}
-        button { background: #3498db; color: white; cursor: pointer; border: none; font-weight: bold; font-size: 16px;}
-        .warning { color: #e67e22; font-size: 0.9em; font-weight: bold; margin-top: 10px; display: block; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #e9ecef; margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 600px; margin: auto; background: white; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); overflow: hidden; }
+        .header { background: #2c3e50; color: white; padding: 20px; text-align: center; }
+        .tabs { display: flex; background: #34495e; cursor: pointer; }
+        .tab { flex: 1; padding: 15px; text-align: center; color: white; font-weight: bold; transition: 0.3s; }
+        .tab:hover, .tab.active { background: #3498db; }
+        .content { padding: 20px; display: none; }
+        .content.active { display: block; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="number"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
+        .checkbox-group { display: flex; align-items: center; background: #f8f9fa; padding: 15px; border-radius: 6px; border: 1px solid #ddd; cursor: pointer;}
+        .checkbox-group input { margin-right: 10px; transform: scale(1.5); }
+        button { width: 100%; padding: 12px; background: #27ae60; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        button:hover { background: #219150; }
+        .card-stat { background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 5px solid #3498db; margin-bottom: 15px; }
+        .alert { padding: 10px; border-radius: 6px; margin-top: 10px; font-weight: bold; text-align: center; display: none;}
+        .diet-list { padding-left: 20px; }
+        .diet-list li { margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <h2>🎯 Objetivo Pedro: 86.45 kg (Junio)</h2>
-    <div id="statusBox" class="status verde">Estado actual: Esperando datos...</div>
-    
-    <label>Peso Actual (kg):</label>
-    <input type="number" id="pesoInput" step="0.01" placeholder="Ej: 96.45">
-    
-    <label>Días de ejercicio esta semana:</label>
-    <input type="number" id="ejercicioInput" placeholder="Ej: 3">
-    
-    <button onclick="calcular()">Registrar y Enviar a Drive</button>
+<div class="container">
+    <div class="header">
+        <h2 style="margin:0;">🎯 Reto Pedro (46 años)</h2>
+        <p style="margin:5px 0 0 0;">Objetivo: 86.45 kg | Altura: 1.81 m</p>
+    </div>
 
-    <span id="alertaEjercicio" class="warning"></span>
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab('registro')">📝 Registro</div>
+        <div class="tab" onclick="switchTab('estadisticas')">📊 Estadísticas</div>
+        <div class="tab" onclick="switchTab('dieta')">🥗 Mi Dieta</div>
+    </div>
+
+    <div id="registro" class="content active">
+        <div class="form-group">
+            <label>Peso de hoy (kg):</label>
+            <input type="number" id="pesoInput" step="0.01" placeholder="Ej: 96.45">
+        </div>
+        <label class="checkbox-group">
+            <input type="checkbox" id="ejercicioInput">
+            <span>✅ He hecho mi sesión de ejercicio hoy</span>
+        </label>
+        
+        <button onclick="guardarDatos()">Guardar Progreso</button>
+        <div id="msgAlerta" class="alert"></div>
+    </div>
+
+    <div id="estadisticas" class="content">
+        <div class="card-stat">
+            <strong>Condición Física (IMC):</strong> <span id="imcText">--</span>
+        </div>
+        <div class="card-stat">
+            <strong>Kilos perdidos:</strong> <span id="perdidaText">0 kg</span>
+        </div>
+        <div class="card-stat">
+            <strong>Faltan para la meta:</strong> <span id="restanteText">-- kg</span>
+        </div>
+        <canvas id="graficoPeso" width="400" height="250"></canvas>
+    </div>
+
+    <div id="dieta" class="content">
+        <h3>⏱️ Ayuno 16:8 (Comes de 10:00 a 18:00)</h3>
+        <ul class="diet-list">
+            <li><strong>10:00h (Romper Ayuno):</strong> Huevos revueltos, o yogur griego con nueces, o tostada 100% integral con pavo. Café solo.</li>
+            <li><strong>14:00h (Comida Fuerte):</strong> Ensalada/Verdura + Proteína (Pollo/Ternera/Pescado) + 1 cda de Aceite de Oliva.</li>
+            <li><strong>17:15h (Cena Ligera):</strong> Pescado blanco al horno o tortilla francesa. A las 18:00h se cierra la cocina.</li>
+            <li><strong>18:30h:</strong> 🏃‍♂️ Salida a correr (Método CACO: Caminar-Correr).</li>
+            <li><strong>Agua:</strong> 2.5 Litros al día mínimo.</li>
+        </ul>
+        <hr>
+        <p style="color: #c0392b;"><strong>🚫 PROHIBIDO:</strong> Alcohol, refrescos azucarados, pan blanco, bollería y fritos.</p>
+    </div>
 </div>
 
 <script>
-    function calcular() {
-        const peso = parseFloat(document.getElementById('pesoInput').value);
-        const ejercicio = parseInt(document.getElementById('ejercicioInput').value);
-        const statusBox = document.getElementById('statusBox');
-        const alertaEj = document.getElementById('alertaEjercicio');
-        
-        // --- PEGA AQUÍ TU URL DE GOOGLE APPS SCRIPT ---
-        const urlScript = "https://script.google.com/macros/s/AKfycbwvJCQk33HrLSOOzBf8LvP-1YnT2ODXnki77-VbJpGouAbRs2_ob45zDh2aKKk59zPecg/exec"; 
+    // --- PEGA AQUÍ TU URL DE GOOGLE APPS SCRIPT ---
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzsx5QrsblOAXcaUz8dJR899mcVBC9ZUDX6sQFhU0Kpb8TrdvjMIpitswEr9m-0FaW3vw/exec"; 
+    
+    let historial = JSON.parse(localStorage.getItem('historialPedro')) || [];
+    let chartInstance = null;
 
-        if(!peso || isNaN(ejercicio)) {
-            alert("Por favor, rellena los dos campos.");
+    function switchTab(tabId) {
+        document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        event.currentTarget.classList.add('active');
+        if(tabId === 'estadisticas') actualizarEstadisticas();
+    }
+
+    function guardarDatos() {
+        // Capturamos la fecha exacta del dispositivo automáticamente
+        const fechaActual = new Date().toISOString().split('T')[0]; 
+        
+        const peso = parseFloat(document.getElementById('pesoInput').value);
+        const ejercicio = document.getElementById('ejercicioInput').checked;
+        const msg = document.getElementById('msgAlerta');
+
+        if(!peso || isNaN(peso)) {
+            msg.style.display = 'block';
+            msg.style.background = '#f8d7da'; msg.style.color = '#721c24';
+            msg.innerText = "⚠️ Por favor, introduce tu peso.";
             return;
         }
 
-        if(peso <= 95.5) { 
-            statusBox.className = "status verde";
-            statusBox.innerText = "¡OBJETIVO EN VERDE! Estás bajando de peso. Sigue así.";
-        } else {
-            statusBox.className = "status rojo";
-            statusBox.innerText = "EN ROJO: Toca apretar un poco esta semana.";
-        }
+        // Guardar en LocalStorage para las gráficas
+        historial.push({ fecha: fechaActual, peso: peso, ejercicio: ejercicio });
+        historial.sort((a, b) => new Date(a.fecha) - new Date(b.fecha)); // Ordenar
+        localStorage.setItem('historialPedro', JSON.stringify(historial));
 
-        if(ejercicio < 3) {
-            alertaEj.innerText = "⚠️ ¡Pedro, hay que moverse más! Mínimo 3 días.";
-        } else {
-            alertaEj.innerText = "✅ ¡Buen ritmo de entrenamiento!";
-        }
+        msg.style.display = 'block';
+        msg.style.background = '#d4edda'; msg.style.color = '#155724';
+        msg.innerText = "⏳ Guardando datos en la nube...";
 
-        fetch(urlScript, {
+        // Enviar a Google Sheets
+        fetch(GOOGLE_SCRIPT_URL, {
             method: 'POST',
             mode: 'no-cors',
-            body: JSON.stringify({ peso: peso, ejercicio: ejercicio })
+            body: JSON.stringify({ fecha: fechaActual, peso: peso, ejercicio: ejercicio })
         }).then(() => {
-            alert("¡Registro guardado con éxito en tu Google Sheets!");
+            msg.innerText = "✅ ¡Registro guardado correctamente!";
+            setTimeout(() => { 
+                msg.style.display = 'none'; 
+                document.getElementById('pesoInput').value = ''; 
+                document.getElementById('ejercicioInput').checked = false;
+            }, 3000);
         }).catch(err => {
-            console.error("Error al guardar: ", err);
+            msg.innerText = "❌ Error de conexión, pero guardado en tu dispositivo.";
+        });
+    }
+
+    function actualizarEstadisticas() {
+        if(historial.length === 0) return;
+
+        const ultimoRegistro = historial[historial.length - 1];
+        const pesoActual = ultimoRegistro.peso;
+        const pesoInicial = 96.45;
+        const meta = 86.45;
+        
+        // Cálculo de IMC (Altura 1.81m)
+        const imc = (pesoActual / (1.81 * 1.81)).toFixed(1);
+        let estadoFisico = "";
+        if(imc >= 30) estadoFisico = "🔴 Obesidad";
+        else if(imc >= 25) estadoFisico = "🟠 Sobrepeso";
+        else estadoFisico = "🟢 Peso Normal";
+
+        document.getElementById('imcText').innerText = `${imc} - ${estadoFisico}`;
+        document.getElementById('perdidaText').innerText = (pesoInicial - pesoActual).toFixed(2) + " kg";
+        document.getElementById('restanteText').innerText = (pesoActual - meta).toFixed(2) + " kg";
+
+        // Actualizar Gráfico
+        const fechas = historial.map(h => h.fecha.substring(5)); // Muestra solo Mes-Día
+        const pesos = historial.map(h => h.peso);
+
+        if(chartInstance) chartInstance.destroy();
+        const ctx = document.getElementById('graficoPeso').getContext('2d');
+        chartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: fechas,
+                datasets: [{
+                    label: 'Mi Peso (kg)',
+                    data: pesos,
+                    borderColor: '#3498db',
+                    backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: { scales: { y: { min: meta - 2, max: pesoInicial + 2 } } }
         });
     }
 </script>

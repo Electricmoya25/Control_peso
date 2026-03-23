@@ -7,7 +7,12 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #e9ecef; margin: 0; padding: 20px; color: #333; }
-        .container { max-width: 600px; margin: auto; background: white; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); overflow: hidden; }
+        .container { max-width: 600px; margin: auto; background: white; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); overflow: hidden; display: none; }
+        
+        /* PANTALLA DE LOGIN */
+        #loginScreen { max-width: 350px; margin: 100px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); text-align: center; }
+        #loginScreen input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+        
         .header { background: #2c3e50; color: white; padding: 20px; text-align: center; }
         .tabs { display: flex; background: #34495e; cursor: pointer; }
         .tab { flex: 1; padding: 15px; text-align: center; color: white; font-weight: bold; transition: 0.3s; }
@@ -21,6 +26,8 @@
         .checkbox-group input { margin-right: 10px; transform: scale(1.5); }
         button { width: 100%; padding: 12px; background: #27ae60; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
         button:hover { background: #219150; }
+        .btn-sync { background: #f39c12; margin-bottom: 20px; }
+        .btn-sync:hover { background: #e67e22; }
         .card-stat { background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 5px solid #3498db; margin-bottom: 15px; }
         .alert { padding: 10px; border-radius: 6px; margin-top: 10px; font-weight: bold; text-align: center; display: none;}
         .diet-list { padding-left: 20px; }
@@ -29,7 +36,16 @@
 </head>
 <body>
 
-<div class="container">
+<div id="loginScreen">
+    <h2 style="color: #2c3e50;">🔒 Acceso Restringido</h2>
+    <p>Introduce tus credenciales</p>
+    <input type="text" id="usuario" placeholder="Usuario">
+    <input type="password" id="password" placeholder="Contraseña">
+    <button onclick="verificarLogin()">Entrar</button>
+    <div id="loginError" class="alert" style="background: #f8d7da; color: #721c24;"></div>
+</div>
+
+<div class="container" id="appMain">
     <div class="header">
         <h2 style="margin:0;">🎯 Reto Pedro (46 años)</h2>
         <p style="margin:5px 0 0 0;">Objetivo: 86.45 kg | Altura: 1.81 m</p>
@@ -56,51 +72,62 @@
     </div>
 
     <div id="estadisticas" class="content">
-        <div class="card-stat">
-            <strong>Condición Física (IMC):</strong> <span id="imcText">--</span>
+        <button class="btn-sync" id="btnSync" onclick="cargarDatosDesdeDrive()">🔄 Sincronizar Datos con Drive</button>
+        
+        <div id="zonaEstadisticas" style="display:none;">
+            <div class="card-stat"><strong>Condición Física (IMC):</strong> <span id="imcText">--</span></div>
+            <div class="card-stat"><strong>Kilos perdidos:</strong> <span id="perdidaText">0 kg</span></div>
+            <div class="card-stat"><strong>Faltan para la meta:</strong> <span id="restanteText">-- kg</span></div>
+            <canvas id="graficoPeso" width="400" height="250"></canvas>
         </div>
-        <div class="card-stat">
-            <strong>Kilos perdidos:</strong> <span id="perdidaText">0 kg</span>
-        </div>
-        <div class="card-stat">
-            <strong>Faltan para la meta:</strong> <span id="restanteText">-- kg</span>
-        </div>
-        <canvas id="graficoPeso" width="400" height="250"></canvas>
     </div>
 
     <div id="dieta" class="content">
         <h3>⏱️ Ayuno 16:8 (Comes de 10:00 a 18:00)</h3>
         <ul class="diet-list">
-            <li><strong>10:00h (Romper Ayuno):</strong> Huevos revueltos, o yogur griego con nueces, o tostada 100% integral con pavo. Café solo.</li>
-            <li><strong>14:00h (Comida Fuerte):</strong> Ensalada/Verdura + Proteína (Pollo/Ternera/Pescado) + 1 cda de Aceite de Oliva.</li>
-            <li><strong>17:15h (Cena Ligera):</strong> Pescado blanco al horno o tortilla francesa. A las 18:00h se cierra la cocina.</li>
+            <li><strong>10:00h (Romper Ayuno):</strong> Huevos revueltos, yogur griego con nueces, o tostada 100% integral. Café.</li>
+            <li><strong>14:00h (Comida Fuerte):</strong> Ensalada/Verdura + Proteína (Pollo/Ternera/Pescado) + 1 cda Aceite Oliva.</li>
+            <li><strong>17:15h (Cena Ligera):</strong> Pescado blanco al horno o tortilla. A las 18:00h se cierra la cocina.</li>
             <li><strong>18:30h:</strong> 🏃‍♂️ Salida a correr (Método CACO: Caminar-Correr).</li>
-            <li><strong>Agua:</strong> 2.5 Litros al día mínimo.</li>
         </ul>
         <hr>
-        <p style="color: #c0392b;"><strong>🚫 PROHIBIDO:</strong> Alcohol, refrescos azucarados, pan blanco, bollería y fritos.</p>
+        <p style="color: #c0392b;"><strong>🚫 PROHIBIDO:</strong> Alcohol, refrescos, pan blanco, bollería y fritos.</p>
     </div>
 </div>
 
 <script>
-    // --- PEGA AQUÍ TU URL DE GOOGLE APPS SCRIPT ---
+    // --- PEGA AQUÍ TU NUEVA URL DE GOOGLE APPS SCRIPT ---
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzsx5QrsblOAXcaUz8dJR899mcVBC9ZUDX6sQFhU0Kpb8TrdvjMIpitswEr9m-0FaW3vw/exec"; 
     
-    let historial = JSON.parse(localStorage.getItem('historialPedro')) || [];
+    let historial = [];
     let chartInstance = null;
 
+    // Lógica de Login
+    function verificarLogin() {
+        const user = document.getElementById('usuario').value;
+        const pass = document.getElementById('password').value;
+        const err = document.getElementById('loginError');
+
+        if(user === "admin" && pass === "Perdida de Peso") {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('appMain').style.display = 'block';
+        } else {
+            err.style.display = 'block';
+            err.innerText = "Usuario o contraseña incorrectos.";
+        }
+    }
+
+    // Lógica de Pestañas
     function switchTab(tabId) {
         document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.getElementById(tabId).classList.add('active');
         event.currentTarget.classList.add('active');
-        if(tabId === 'estadisticas') actualizarEstadisticas();
     }
 
+    // Guardar (solo envía a la nube, no guarda local)
     function guardarDatos() {
-        // Capturamos la fecha exacta del dispositivo automáticamente
         const fechaActual = new Date().toISOString().split('T')[0]; 
-        
         const peso = parseFloat(document.getElementById('pesoInput').value);
         const ejercicio = document.getElementById('ejercicioInput').checked;
         const msg = document.getElementById('msgAlerta');
@@ -112,32 +139,48 @@
             return;
         }
 
-        // Guardar en LocalStorage para las gráficas
-        historial.push({ fecha: fechaActual, peso: peso, ejercicio: ejercicio });
-        historial.sort((a, b) => new Date(a.fecha) - new Date(b.fecha)); // Ordenar
-        localStorage.setItem('historialPedro', JSON.stringify(historial));
-
         msg.style.display = 'block';
         msg.style.background = '#d4edda'; msg.style.color = '#155724';
-        msg.innerText = "⏳ Guardando datos en la nube...";
+        msg.innerText = "⏳ Enviando a Drive...";
 
-        // Enviar a Google Sheets
         fetch(GOOGLE_SCRIPT_URL, {
             method: 'POST',
             mode: 'no-cors',
             body: JSON.stringify({ fecha: fechaActual, peso: peso, ejercicio: ejercicio })
         }).then(() => {
-            msg.innerText = "✅ ¡Registro guardado correctamente!";
+            msg.innerText = "✅ ¡Guardado en la nube!";
             setTimeout(() => { 
                 msg.style.display = 'none'; 
                 document.getElementById('pesoInput').value = ''; 
                 document.getElementById('ejercicioInput').checked = false;
             }, 3000);
         }).catch(err => {
-            msg.innerText = "❌ Error de conexión, pero guardado en tu dispositivo.";
+            msg.innerText = "❌ Error de conexión al enviar.";
         });
     }
 
+    // Descargar datos de Drive y actualizar gráfica
+    function cargarDatosDesdeDrive() {
+        const btn = document.getElementById('btnSync');
+        btn.innerText = "⏳ Descargando datos...";
+        
+        fetch(GOOGLE_SCRIPT_URL)
+            .then(response => response.json())
+            .then(data => {
+                historial = data;
+                historial.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+                actualizarEstadisticas();
+                btn.innerText = "🔄 Sincronizar Datos con Drive";
+                document.getElementById('zonaEstadisticas').style.display = 'block';
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                btn.innerText = "❌ Error. Reintentar Sincronización";
+                alert("No se pudieron cargar los datos. Verifica la URL de Google Script.");
+            });
+    }
+
+    // Calcular estadísticas
     function actualizarEstadisticas() {
         if(historial.length === 0) return;
 
@@ -146,7 +189,6 @@
         const pesoInicial = 96.45;
         const meta = 86.45;
         
-        // Cálculo de IMC (Altura 1.81m)
         const imc = (pesoActual / (1.81 * 1.81)).toFixed(1);
         let estadoFisico = "";
         if(imc >= 30) estadoFisico = "🔴 Obesidad";
@@ -157,8 +199,10 @@
         document.getElementById('perdidaText').innerText = (pesoInicial - pesoActual).toFixed(2) + " kg";
         document.getElementById('restanteText').innerText = (pesoActual - meta).toFixed(2) + " kg";
 
-        // Actualizar Gráfico
-        const fechas = historial.map(h => h.fecha.substring(5)); // Muestra solo Mes-Día
+        const fechas = historial.map(h => {
+            let parts = h.fecha.split('-');
+            return parts.length === 3 ? `${parts[1]}/${parts[2]}` : h.fecha; 
+        });
         const pesos = historial.map(h => h.peso);
 
         if(chartInstance) chartInstance.destroy();

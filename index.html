@@ -140,10 +140,11 @@
 </div>
 
 <script>
-    // --- PEGA AQUÍ TU URL DE GOOGLE APPS SCRIPT ---
+    // Tu URL de Google Apps Script original
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyeJXwbkWxKCRQnLubUIRa_ZbrWW_ZLlYbVch6Gj_bnb9IO9nONKj2Khlct6Sk82c68Sg/exec"; 
     
-    let historial = [];
+    // Ahora leemos primero de la memoria del navegador (localStorage)
+    let historial = JSON.parse(localStorage.getItem('historialPedro')) || [];
     let chartInstance = null;
 
     // Lógica de Login
@@ -155,6 +156,12 @@
         if(user === "admin" && pass === "Perdida de Peso") {
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('appMain').style.display = 'block';
+            
+            // Si ya hay datos al entrar, preparamos la gráfica oculta
+            if (historial.length > 0) {
+                document.getElementById('zonaEstadisticas').style.display = 'block';
+                actualizarEstadisticas();
+            }
         } else {
             err.style.display = 'block';
             err.innerText = "Usuario o contraseña incorrectos.";
@@ -167,9 +174,15 @@
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.getElementById(tabId).classList.add('active');
         event.currentTarget.classList.add('active');
+
+        // Si entramos a estadísticas, verificamos si hay datos para mostrar
+        if (tabId === 'estadisticas' && historial.length > 0) {
+            document.getElementById('zonaEstadisticas').style.display = 'block';
+            actualizarEstadisticas();
+        }
     }
 
-    // Guardar en Drive
+    // Guardar en Navegador y en Drive
     function guardarDatos() {
         const fechaActual = new Date().toISOString().split('T')[0]; 
         const peso = parseFloat(document.getElementById('pesoInput').value);
@@ -183,27 +196,36 @@
             return;
         }
 
+        // 1. Guardar en memoria local
+        historial.push({ fecha: fechaActual, peso: peso, ejercicio: ejercicio });
+        historial.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+        localStorage.setItem('historialPedro', JSON.stringify(historial));
+
+        // Actualizamos la gráfica por si nos vamos a esa pestaña rápido
+        actualizarEstadisticas();
+
         msg.style.display = 'block';
         msg.style.background = '#d4edda'; msg.style.color = '#155724';
-        msg.innerText = "⏳ Enviando a Drive...";
+        msg.innerText = "⏳ Guardando datos y enviando a Drive...";
 
+        // 2. Enviar a Drive (copia de seguridad)
         fetch(GOOGLE_SCRIPT_URL, {
             method: 'POST',
             mode: 'no-cors',
             body: JSON.stringify({ fecha: fechaActual, peso: peso, ejercicio: ejercicio })
         }).then(() => {
-            msg.innerText = "✅ ¡Guardado en la nube!";
+            msg.innerText = "✅ ¡Guardado en local y en la nube!";
             setTimeout(() => { 
                 msg.style.display = 'none'; 
                 document.getElementById('pesoInput').value = ''; 
                 document.getElementById('ejercicioInput').checked = false;
             }, 3000);
         }).catch(err => {
-            msg.innerText = "❌ Error de conexión al enviar.";
+            msg.innerText = "⚠️ Guardado en navegador, pero falló el envío a Drive.";
         });
     }
 
-    // Descargar de Drive
+    // Descargar de Drive (por si borras caché o cambias de PC)
     function cargarDatosDesdeDrive() {
         const btn = document.getElementById('btnSync');
         btn.innerText = "⏳ Descargando datos...";
@@ -213,6 +235,10 @@
             .then(data => {
                 historial = data;
                 historial.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+                
+                // Sobrescribimos la memoria local con los datos frescos de Drive
+                localStorage.setItem('historialPedro', JSON.stringify(historial));
+                
                 actualizarEstadisticas();
                 btn.innerText = "🔄 Sincronizar Datos con Drive";
                 document.getElementById('zonaEstadisticas').style.display = 'block';
@@ -220,7 +246,7 @@
             .catch(error => {
                 console.error("Error:", error);
                 btn.innerText = "❌ Error. Reintentar Sincronización";
-                alert("No se pudieron cargar los datos. Verifica la URL de Google Script.");
+                alert("No se pudieron cargar los datos. Verifica la URL de Google Script y los permisos.");
             });
     }
 

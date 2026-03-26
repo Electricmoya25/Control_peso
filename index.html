@@ -1,299 +1,1086 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Pedro -10kg</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #e9ecef; margin: 0; padding: 20px; color: #333; }
-        .container { max-width: 600px; margin: auto; background: white; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); overflow: hidden; display: none; }
-        
-        /* PANTALLA DE LOGIN */
-        #loginScreen { max-width: 350px; margin: 100px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); text-align: center; }
-        #loginScreen input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
-        
-        .header { background: #2c3e50; color: white; padding: 20px; text-align: center; }
-        .tabs { display: flex; background: #34495e; cursor: pointer; }
-        .tab { flex: 1; padding: 15px; text-align: center; color: white; font-weight: bold; transition: 0.3s; font-size: 14px;}
-        .tab:hover, .tab.active { background: #3498db; }
-        .content { padding: 20px; display: none; }
-        .content.active { display: block; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input[type="number"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
-        .checkbox-group { display: flex; align-items: center; background: #f8f9fa; padding: 15px; border-radius: 6px; border: 1px solid #ddd; cursor: pointer;}
-        .checkbox-group input { margin-right: 10px; transform: scale(1.5); }
-        button { width: 100%; padding: 12px; background: #27ae60; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        button:hover { background: #219150; }
-        .btn-sync { background: #f39c12; margin-bottom: 20px; }
-        .btn-sync:hover { background: #e67e22; }
-        .card-stat { background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 5px solid #3498db; margin-bottom: 15px; }
-        .alert { padding: 10px; border-radius: 6px; margin-top: 10px; font-weight: bold; text-align: center; display: none;}
-        
-        /* ESTILOS DE LA DIETA */
-        .day-card { background: #fdfdfd; border: 1px solid #eee; border-radius: 8px; padding: 15px; margin-bottom: 15px; border-left: 5px solid #27ae60;}
-        .day-title { font-weight: bold; color: #2c3e50; margin-top: 0; border-bottom: 2px solid #eee; padding-bottom: 5px; text-transform: uppercase;}
-        .meal { margin: 8px 0; font-size: 14px; }
-        .meal strong { color: #e67e22; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WeightTrack — Tu Progreso</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  /* ===================== RESET & BASE ===================== */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #0f1117;
+    --surface:   #1a1d27;
+    --surface2:  #22263a;
+    --border:    #2e3248;
+    --blue:      #3d8ef0;
+    --blue-dim:  #1f4a8a;
+    --green:     #27ae60;
+    --green-dim: #1a5e38;
+    --red:       #e74c3c;
+    --yellow:    #f39c12;
+    --text:      #e8eaf6;
+    --text2:     #8892b0;
+    --text3:     #4a5068;
+    --radius:    16px;
+    --radius-sm: 10px;
+    --shadow:    0 8px 32px rgba(0,0,0,0.45);
+    --trans:     0.22s cubic-bezier(.4,0,.2,1);
+  }
+
+  html { font-size: 16px; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background-image:
+      radial-gradient(ellipse 80% 60% at 50% 0%, rgba(61,142,240,0.10) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 40% at 90% 80%, rgba(39,174,96,0.07) 0%, transparent 50%);
+  }
+
+  /* ===================== SCROLLBAR ===================== */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+  /* ===================== LOGIN ===================== */
+  #loginScreen {
+    width: 100%;
+    max-width: 400px;
+    animation: fadeUp .5s ease both;
+  }
+  .login-logo {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  .login-logo .icon {
+    font-size: 48px;
+    display: block;
+    margin-bottom: 8px;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%,100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+  }
+  .login-logo h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: var(--text);
+  }
+  .login-logo p {
+    color: var(--text2);
+    font-size: .9rem;
+    margin-top: 4px;
+  }
+  .login-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px;
+    box-shadow: var(--shadow);
+  }
+  .form-group { margin-bottom: 18px; }
+  .form-group label {
+    display: block;
+    font-size: .8rem;
+    font-weight: 600;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin-bottom: 7px;
+  }
+  .form-group input[type="text"],
+  .form-group input[type="password"],
+  .form-group input[type="number"] {
+    width: 100%;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    color: var(--text);
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 1rem;
+    transition: border-color var(--trans), box-shadow var(--trans);
+    outline: none;
+  }
+  .form-group input:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(61,142,240,0.15);
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 13px 22px;
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: .95rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all var(--trans);
+    letter-spacing: .01em;
+    user-select: none;
+  }
+  .btn-primary {
+    width: 100%;
+    background: var(--blue);
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(61,142,240,0.35);
+  }
+  .btn-primary:hover { background: #5aa3f5; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(61,142,240,0.45); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-secondary {
+    background: var(--surface2);
+    color: var(--text2);
+    border: 1px solid var(--border);
+    font-size: .85rem;
+    padding: 10px 16px;
+  }
+  .btn-secondary:hover { background: var(--border); color: var(--text); }
+  .btn-green {
+    background: var(--green);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(39,174,96,0.3);
+    width: 100%;
+  }
+  .btn-green:hover { background: #2ecc71; transform: translateY(-1px); }
+
+  /* ===================== TOAST ===================== */
+  #toast {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 12px 24px;
+    border-radius: 99px;
+    font-size: .9rem;
+    font-weight: 500;
+    box-shadow: var(--shadow);
+    transition: transform .35s cubic-bezier(.4,0,.2,1), opacity .35s;
+    opacity: 0;
+    z-index: 9999;
+    white-space: nowrap;
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+  #toast.success { border-color: var(--green); color: var(--green); }
+  #toast.error   { border-color: var(--red);   color: var(--red);   }
+  #toast.info    { border-color: var(--blue);   color: var(--blue);  }
+
+  /* ===================== APP ===================== */
+  #app {
+    width: 100%;
+    max-width: 620px;
+    display: none;
+    flex-direction: column;
+    gap: 0;
+    animation: fadeUp .4s ease both;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Header */
+  .app-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 8px 16px;
+  }
+  .app-header-left h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .app-header-left span {
+    font-size: .8rem;
+    color: var(--text2);
+  }
+  .app-header .btn-logout {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text2);
+    font-size: .78rem;
+    padding: 7px 14px;
+    border-radius: 99px;
+    cursor: pointer;
+    transition: all var(--trans);
+    font-family: inherit;
+    font-weight: 500;
+  }
+  .app-header .btn-logout:hover { border-color: var(--red); color: var(--red); }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 5px;
+    margin-bottom: 16px;
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 10px 8px;
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+    color: var(--text2);
+    font-family: inherit;
+    font-size: .88rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--trans);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+  }
+  .tab-btn:hover { color: var(--text); background: var(--surface2); }
+  .tab-btn.active {
+    background: var(--blue);
+    color: #fff;
+    box-shadow: 0 2px 10px rgba(61,142,240,0.3);
+  }
+
+  /* Tab panels */
+  .tab-panel { display: none; flex-direction: column; gap: 14px; }
+  .tab-panel.active { display: flex; animation: fadeUp .3s ease both; }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px;
+  }
+  .card-title {
+    font-size: .75rem;
+    font-weight: 600;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .card-title::before {
+    content: '';
+    display: inline-block;
+    width: 3px;
+    height: 14px;
+    background: var(--blue);
+    border-radius: 99px;
+  }
+
+  /* Registro */
+  .weight-input-big {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .weight-input-big input {
+    font-size: 2.4rem;
+    font-weight: 700;
+    font-family: 'DM Mono', monospace;
+    background: var(--surface2);
+    border: 2px solid var(--border);
+    color: var(--text);
+    padding: 10px 16px;
+    border-radius: var(--radius-sm);
+    width: 180px;
+    outline: none;
+    transition: border-color var(--trans), box-shadow var(--trans);
+    -moz-appearance: textfield;
+  }
+  .weight-input-big input::-webkit-outer-spin-button,
+  .weight-input-big input::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .weight-input-big input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(61,142,240,0.15); }
+  .weight-input-big span { font-size: 1.4rem; color: var(--text2); font-weight: 300; }
+
+  .checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin-bottom: 16px;
+    cursor: pointer;
+    transition: border-color var(--trans);
+    user-select: none;
+  }
+  .checkbox-row:hover { border-color: var(--green); }
+  .checkbox-row input[type="checkbox"] { display: none; }
+  .checkbox-row .check-box {
+    width: 22px; height: 22px;
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all var(--trans);
+    flex-shrink: 0;
+    font-size: 13px;
+  }
+  .checkbox-row input:checked + .check-box {
+    background: var(--green);
+    border-color: var(--green);
+  }
+  .checkbox-row .check-label { font-size: .95rem; font-weight: 500; }
+
+  /* Historial */
+  .history-list { display: flex; flex-direction: column; gap: 8px; }
+  .history-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    font-size: .88rem;
+    transition: border-color var(--trans);
+  }
+  .history-item:hover { border-color: var(--blue-dim); }
+  .history-item .h-date { color: var(--text2); font-family: 'DM Mono', monospace; font-size: .82rem; }
+  .history-item .h-weight { font-weight: 700; font-family: 'DM Mono', monospace; font-size: 1.05rem; }
+  .history-item .h-ex { font-size: .75rem; color: var(--green); background: rgba(39,174,96,.12); padding: 3px 10px; border-radius: 99px; }
+  .history-item .h-ex.no { color: var(--text3); background: transparent; }
+  .empty-msg { text-align: center; color: var(--text3); padding: 24px 0; font-size: .9rem; }
+
+  /* Stats */
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .stat-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 18px;
+    transition: border-color var(--trans), transform var(--trans);
+  }
+  .stat-box:hover { border-color: var(--blue-dim); transform: translateY(-2px); }
+  .stat-box .s-label { font-size: .75rem; color: var(--text2); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+  .stat-box .s-value { font-size: 1.8rem; font-weight: 700; font-family: 'DM Mono', monospace; line-height: 1; }
+  .stat-box .s-sub { font-size: .78rem; color: var(--text2); margin-top: 5px; }
+  .stat-box.blue .s-value { color: var(--blue); }
+  .stat-box.green .s-value { color: var(--green); }
+  .stat-box.yellow .s-value { color: var(--yellow); }
+  .stat-box.red .s-value { color: var(--red); }
+  .stat-box.full { grid-column: 1 / -1; }
+
+  .imc-badge {
+    display: inline-block;
+    padding: 5px 14px;
+    border-radius: 99px;
+    font-size: .8rem;
+    font-weight: 600;
+    margin-top: 8px;
+  }
+  .imc-normal  { background: rgba(39,174,96,.15); color: var(--green); }
+  .imc-sobre   { background: rgba(243,156,18,.15); color: var(--yellow); }
+  .imc-obesity { background: rgba(231,76,60,.15); color: var(--red); }
+
+  /* Progress bar */
+  .progress-bar-wrap {
+    background: var(--surface2);
+    border-radius: 99px;
+    height: 8px;
+    overflow: hidden;
+    margin-top: 10px;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--blue), var(--green));
+    border-radius: 99px;
+    transition: width 1s cubic-bezier(.4,0,.2,1);
+  }
+
+  /* Chart */
+  .chart-wrap {
+    position: relative;
+    height: 220px;
+  }
+
+  /* Sync row */
+  .sync-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .sync-row .btn-secondary { flex: 1; }
+
+  /* Dieta */
+  .fast-banner {
+    background: linear-gradient(135deg, rgba(61,142,240,.15), rgba(39,174,96,.10));
+    border: 1px solid var(--blue-dim);
+    border-radius: var(--radius-sm);
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: .9rem;
+    font-weight: 500;
+    color: var(--blue);
+  }
+  .fast-banner span.icon { font-size: 1.4rem; }
+
+  .diet-day {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--green);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+  }
+  .diet-day-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 13px 18px;
+    cursor: pointer;
+    user-select: none;
+    transition: background var(--trans);
+  }
+  .diet-day-header:hover { background: var(--surface2); }
+  .diet-day-header h3 {
+    font-size: .82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .09em;
+    color: var(--green);
+  }
+  .diet-day-header .chevron { color: var(--text3); transition: transform var(--trans); font-size: .9rem; }
+  .diet-day-header.open .chevron { transform: rotate(180deg); }
+  .diet-day-body {
+    display: none;
+    padding: 0 18px 16px;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .diet-day-body.open { display: flex; }
+  .meal-row { display: flex; flex-direction: column; gap: 3px; }
+  .meal-label { font-size: .72rem; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .07em; }
+  .meal-text { font-size: .9rem; color: var(--text); }
+
+  /* Responsivo */
+  @media (max-width: 480px) {
+    .stats-grid { grid-template-columns: 1fr; }
+    .stat-box.full { grid-column: 1; }
+    .weight-input-big input { width: 150px; font-size: 1.9rem; }
+  }
+</style>
 </head>
 <body>
 
+<!-- ======================== LOGIN ======================== -->
 <div id="loginScreen">
-    <h2 style="color: #2c3e50;">🔒 Acceso App Pedro</h2>
-    <input type="text" id="usuario" placeholder="Usuario">
-    <input type="password" id="password" placeholder="Contraseña">
-    <button onclick="verificarLogin()">Entrar</button>
-    <div id="loginError" class="alert" style="background: #f8d7da; color: #721c24;"></div>
+  <div class="login-logo">
+    <span class="icon">⚖️</span>
+    <h1>WeightTrack</h1>
+    <p>Tu diario personal de progreso</p>
+  </div>
+  <div class="login-card">
+    <div class="form-group">
+      <label>Usuario</label>
+      <input type="text" id="loginUser" placeholder="Introduce tu usuario" autocomplete="username">
+    </div>
+    <div class="form-group">
+      <label>Contraseña</label>
+      <input type="password" id="loginPass" placeholder="Introduce tu contraseña" autocomplete="current-password">
+    </div>
+    <button class="btn btn-primary" onclick="doLogin()">🔑 Iniciar sesión</button>
+  </div>
 </div>
 
-<div class="container" id="appMain">
-    <div class="header">
-        <h2 style="margin:0;">🎯 Reto Pedro (46 años)</h2>
-        <p style="margin:5px 0 0 0;">Objetivo: 86.45 kg | Altura: 1.81 m</p>
+<!-- ======================== APP ======================== -->
+<div id="app">
+  <!-- Header -->
+  <div class="app-header">
+    <div class="app-header-left">
+      <h2>⚖️ WeightTrack</h2>
+      <span id="headerDate"></span>
+    </div>
+    <button class="btn-logout" onclick="doLogout()">Cerrar sesión</button>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="registro" onclick="switchTab('registro', this)">📝 Registro</button>
+    <button class="tab-btn" data-tab="stats" onclick="switchTab('stats', this)">📊 Stats</button>
+    <button class="tab-btn" data-tab="dieta" onclick="switchTab('dieta', this)">🥗 Dieta</button>
+  </div>
+
+  <!-- ---- PANEL REGISTRO ---- -->
+  <div id="panel-registro" class="tab-panel active">
+    <div class="card">
+      <div class="card-title">Peso de hoy</div>
+      <div class="weight-input-big">
+        <input type="number" id="pesoInput" step="0.01" min="30" max="250" placeholder="0.00">
+        <span>kg</span>
+      </div>
+      <label class="checkbox-row" for="ejercicioCheck">
+        <input type="checkbox" id="ejercicioCheck">
+        <span class="check-box" id="checkBoxVisual">✓</span>
+        <span class="check-label">🏃 He hecho ejercicio hoy</span>
+      </label>
+      <button class="btn btn-green" onclick="guardarPeso()">💾 Guardar Progreso</button>
     </div>
 
-    <div class="tabs">
-        <div class="tab active" onclick="switchTab('registro')">📝 Registro</div>
-        <div class="tab" onclick="switchTab('estadisticas')">📊 Estadísticas</div>
-        <div class="tab" onclick="switchTab('dieta')">🥗 Mi Dieta (16:8)</div>
+    <div class="card">
+      <div class="card-title">Sincronización</div>
+      <div class="sync-row">
+        <button class="btn btn-secondary" onclick="sincronizarDesdeGoogle()">☁️ Cargar desde Drive</button>
+        <span id="syncStatus" style="font-size:.8rem;color:var(--text3)"></span>
+      </div>
     </div>
 
-    <div id="registro" class="content active">
-        <div class="form-group">
-            <label>Peso de hoy (kg):</label>
-            <input type="number" id="pesoInput" step="0.01" placeholder="Ej: 96.45">
+    <div class="card">
+      <div class="card-title">Historial reciente</div>
+      <div id="historialLista" class="history-list">
+        <p class="empty-msg">Aún no hay registros guardados.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ---- PANEL STATS ---- -->
+  <div id="panel-stats" class="tab-panel">
+    <div id="statsEmpty" class="card" style="text-align:center;padding:40px;display:none">
+      <p style="color:var(--text3)">Guarda al menos un registro para ver estadísticas.</p>
+    </div>
+    <div id="statsContent">
+      <div class="stats-grid">
+        <div class="stat-box blue">
+          <div class="s-label">Peso actual</div>
+          <div class="s-value" id="statPesoActual">—</div>
+          <div class="s-sub">kg</div>
         </div>
-        <label class="checkbox-group">
-            <input type="checkbox" id="ejercicioInput">
-            <span>✅ He hecho mi sesión de ejercicio hoy</span>
-        </label>
-        
-        <button onclick="guardarDatos()">Guardar Progreso</button>
-        <div id="msgAlerta" class="alert"></div>
+        <div class="stat-box" id="imcBox">
+          <div class="s-label">IMC</div>
+          <div class="s-value" id="statIMC">—</div>
+          <div><span class="imc-badge" id="imcBadge">—</span></div>
+        </div>
+        <div class="stat-box green">
+          <div class="s-label">Kilos perdidos</div>
+          <div class="s-value" id="statPerdidos">—</div>
+          <div class="s-sub">desde 96.45 kg</div>
+        </div>
+        <div class="stat-box yellow">
+          <div class="s-label">Kilos restantes</div>
+          <div class="s-value" id="statRestantes">—</div>
+          <div class="s-sub">meta: 86.45 kg</div>
+        </div>
+        <div class="stat-box full">
+          <div class="s-label">Progreso hacia la meta</div>
+          <div class="s-value" id="statPorcentaje">—</div>
+          <div class="s-sub">% completado</div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+          </div>
+        </div>
+        <div class="stat-box full">
+          <div class="s-label">Días con ejercicio</div>
+          <div class="s-value" id="statEjercicio">—</div>
+          <div class="s-sub" id="statEjercicioSub">de — registros</div>
+        </div>
+      </div>
     </div>
 
-    <div id="estadisticas" class="content">
-        <button class="btn-sync" id="btnSync" onclick="cargarDatosDesdeDrive()">🔄 Sincronizar Datos con Drive</button>
-        
-        <div id="zonaEstadisticas" style="display:none;">
-            <div class="card-stat"><strong>Condición Física (IMC):</strong> <span id="imcText">--</span></div>
-            <div class="card-stat"><strong>Kilos perdidos:</strong> <span id="perdidaText">0 kg</span></div>
-            <div class="card-stat"><strong>Faltan para la meta:</strong> <span id="restanteText">-- kg</span></div>
-            <canvas id="graficoPeso" width="400" height="250"></canvas>
-        </div>
+    <div class="card">
+      <div class="card-title">Evolución del peso</div>
+      <div class="chart-wrap">
+        <canvas id="weightChart"></canvas>
+      </div>
     </div>
+  </div>
 
-    <div id="dieta" class="content" style="max-height: 500px; overflow-y: auto;">
-        <p style="font-size: 14px; color: #555;"><strong>Regla de Oro:</strong> Come solo entre las 10:00 y las 18:00. Fuera de esa hora, solo agua, infusiones o café solo.</p>
-        
-        <div class="day-card">
-            <h4 class="day-title">Lunes</h4>
-            <div class="meal"><strong>10:00 (Desayuno):</strong> 2 huevos revueltos con espinacas y café solo.</div>
-            <div class="meal"><strong>14:00 (Comida):</strong> Pechuga de pollo a la plancha con ensalada mixta y 1/2 aguacate.</div>
-            <div class="meal"><strong>17:15 (Cena):</strong> Salmón al horno o a la plancha con brócoli al vapor.</div>
-        </div>
-
-        <div class="day-card">
-            <h4 class="day-title">Martes</h4>
-            <div class="meal"><strong>10:00 (Desayuno):</strong> Yogur griego natural con un puñado de nueces. Café o Té.</div>
-            <div class="meal"><strong>14:00 (Comida):</strong> Lentejas con verduras (zanahoria, cebolla, pimiento - sin chorizo).</div>
-            <div class="meal"><strong>17:15 (Cena):</strong> Tortilla francesa de 2 huevos con una lata de atún al natural.</div>
-        </div>
-
-        <div class="day-card">
-            <h4 class="day-title">Miércoles</h4>
-            <div class="meal"><strong>10:00 (Desayuno):</strong> Tostada (pan 100% integral) con tomate triturado y lonchas de pavo.</div>
-            <div class="meal"><strong>14:00 (Comida):</strong> Merluza a la plancha con espárragos trigueros y 1 patata cocida.</div>
-            <div class="meal"><strong>17:15 (Cena):</strong> Tiras de pavo salteadas con pimientos y cebolla.</div>
-        </div>
-
-        <div class="day-card">
-            <h4 class="day-title">Jueves</h4>
-            <div class="meal"><strong>10:00 (Desayuno):</strong> Bol de avena cocida (porridge) con canela y almendras crudas.</div>
-            <div class="meal"><strong>14:00 (Comida):</strong> Filete de ternera magra a la plancha con buena ración de judías verdes.</div>
-            <div class="meal"><strong>17:15 (Cena):</strong> Revuelto de champiñones y gambas peladas (1 huevo + 2 claras).</div>
-        </div>
-
-        <div class="day-card">
-            <h4 class="day-title">Viernes</h4>
-            <div class="meal"><strong>10:00 (Desayuno):</strong> 2 huevos cocidos con rodajas de tomate y un chorrito de aceite.</div>
-            <div class="meal"><strong>14:00 (Comida):</strong> Ensalada de garbanzos, pepino, tomate, cebolla y huevo duro.</div>
-            <div class="meal"><strong>17:15 (Cena):</strong> Lubina o dorada al horno con rodajas de calabacín asado.</div>
-        </div>
-
-        <div class="day-card">
-            <h4 class="day-title">Sábado</h4>
-            <div class="meal"><strong>10:00 (Desayuno):</strong> Tostada 100% integral con medio aguacate y queso fresco.</div>
-            <div class="meal"><strong>14:00 (Comida):</strong> Pollo asado (sin comer la piel) con ensalada verde variada.</div>
-            <div class="meal"><strong>17:15 (Cena):</strong> Sepia a la plancha con ajo y perejil, acompañada de tomate picado.</div>
-        </div>
-
-        <div class="day-card">
-            <h4 class="day-title">Domingo</h4>
-            <div class="meal"><strong>10:00 (Desayuno):</strong> Tortilla de 2 huevos con champiñones. Café.</div>
-            <div class="meal"><strong>14:00 (Comida):</strong> Arroz integral (ración moderada) con calamares o marisco.</div>
-            <div class="meal"><strong>17:15 (Cena):</strong> Ventresca de atún escurrida sobre una cama de rúcula y tomates cherry.</div>
-        </div>
+  <!-- ---- PANEL DIETA ---- -->
+  <div id="panel-dieta" class="tab-panel">
+    <div class="fast-banner">
+      <span class="icon">⏰</span>
+      <span>Come solo entre las <strong>10:00 y las 18:00</strong> — Ayuno 16:8 · Dieta <strong>Keto adaptada</strong> (~50–80 g carbos/día)</span>
     </div>
+    <div id="dietaDias"></div>
+  </div>
 </div>
+
+<!-- TOAST -->
+<div id="toast"></div>
 
 <script>
-    // Tu URL de Google Apps Script original
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyeJXwbkWxKCRQnLubUIRa_ZbrWW_ZLlYbVch6Gj_bnb9IO9nONKj2Khlct6Sk82c68Sg/exec"; 
-    
-    // Ahora leemos primero de la memoria del navegador (localStorage)
-    let historial = JSON.parse(localStorage.getItem('historialPedro')) || [];
-    let chartInstance = null;
+/* ============================================================
+   CONFIGURACIÓN
+============================================================ */
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyeJXwbkWxKCRQnLubUIRa_ZbrWW_ZLlYbVch6Gj_bnb9IO9nONKj2Khlct6Sk82c68Sg/exec';
+const PESO_INICIAL   = 96.45;
+const PESO_META      = 86.45;
+const ALTURA         = 1.81;
+const USUARIO_OK     = 'admin';
+const PASSWORD_OK    = 'Peso';
 
-    // Lógica de Login
-    function verificarLogin() {
-        const user = document.getElementById('usuario').value;
-        const pass = document.getElementById('password').value;
-        const err = document.getElementById('loginError');
+/* ============================================================
+   LOGIN
+============================================================ */
+function doLogin() {
+  const user = document.getElementById('loginUser').value.trim();
+  const pass = document.getElementById('loginPass').value;
+  if (user === USUARIO_OK && pass === PASSWORD_OK) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    initApp();
+  } else {
+    showToast('❌ Credenciales incorrectas', 'error');
+    document.getElementById('loginPass').value = '';
+    document.getElementById('loginPass').focus();
+  }
+}
 
-        if(user === "admin" && pass === "Perdida de Peso") {
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('appMain').style.display = 'block';
-            
-            // Si ya hay datos al entrar, preparamos la gráfica oculta
-            if (historial.length > 0) {
-                document.getElementById('zonaEstadisticas').style.display = 'block';
-                actualizarEstadisticas();
-            }
-        } else {
-            err.style.display = 'block';
-            err.innerText = "Usuario o contraseña incorrectos.";
+function doLogout() {
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'block';
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+}
+
+// Enter en el login
+document.getElementById('loginPass').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+document.getElementById('loginUser').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('loginPass').focus();
+});
+
+/* ============================================================
+   STORAGE
+============================================================ */
+function getData() {
+  try {
+    return JSON.parse(localStorage.getItem('weightData') || '[]');
+  } catch { return []; }
+}
+
+function saveData(arr) {
+  // Ordenar por fecha ascendente
+  arr.sort((a, b) => a.fecha.localeCompare(b.fecha));
+  localStorage.setItem('weightData', JSON.stringify(arr));
+}
+
+/* ============================================================
+   INIT APP
+============================================================ */
+let chartInstance = null;
+
+function initApp() {
+  // Fecha de hoy
+  const now = new Date();
+  document.getElementById('headerDate').textContent = now.toLocaleDateString('es-ES', {
+    weekday: 'long', day: 'numeric', month: 'long'
+  });
+  renderHistorial();
+  renderStats();
+  renderDieta();
+}
+
+/* ============================================================
+   TABS
+============================================================ */
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panel-' + name).classList.add('active');
+  if (name === 'stats') renderStats();
+}
+
+/* ============================================================
+   CHECKBOX VISUAL
+============================================================ */
+document.getElementById('ejercicioCheck').addEventListener('change', function() {
+  document.getElementById('checkBoxVisual').style.opacity = this.checked ? '1' : '0.3';
+});
+
+/* ============================================================
+   GUARDAR PESO
+============================================================ */
+function guardarPeso() {
+  const pesoRaw = document.getElementById('pesoInput').value;
+  const ejercicio = document.getElementById('ejercicioCheck').checked;
+
+  if (!pesoRaw || isNaN(pesoRaw) || +pesoRaw <= 0) {
+    showToast('⚠️ Introduce un peso válido', 'error');
+    return;
+  }
+  const peso = parseFloat(parseFloat(pesoRaw).toFixed(2));
+  if (peso < 30 || peso > 250) {
+    showToast('⚠️ El peso debe estar entre 30 y 250 kg', 'error');
+    return;
+  }
+
+  const fecha = getTodayStr();
+  let data = getData();
+
+  // Prevención de duplicados: si existe hoy, actualizar
+  const existeIdx = data.findIndex(r => r.fecha === fecha);
+  const registro = { fecha, peso, ejercicio };
+
+  if (existeIdx >= 0) {
+    data[existeIdx] = registro;
+    showToast('✏️ Registro de hoy actualizado', 'success');
+  } else {
+    data.push(registro);
+    showToast('✅ Progreso guardado', 'success');
+  }
+
+  saveData(data);
+  renderHistorial();
+  renderStats();
+
+  // Reset form
+  document.getElementById('pesoInput').value = '';
+  document.getElementById('ejercicioCheck').checked = false;
+  document.getElementById('checkBoxVisual').style.opacity = '0.3';
+
+  // Enviar a Google Apps Script (no-cors, fire & forget)
+  enviarAGoogle(registro);
+}
+
+function getTodayStr() {
+  const d = new Date();
+  return d.getFullYear() + '-' +
+    String(d.getMonth()+1).padStart(2,'0') + '-' +
+    String(d.getDate()).padStart(2,'0');
+}
+
+/* ============================================================
+   GOOGLE APPS SCRIPT: ENVIAR (POST)
+============================================================ */
+async function enviarAGoogle(registro) {
+  if (!GOOGLE_SCRIPT_URL) return;
+  try {
+    await fetch(GOOGLE_SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(registro)
+    });
+  } catch (e) {
+    console.warn('Error enviando a Google:', e);
+  }
+}
+
+/* ============================================================
+   GOOGLE APPS SCRIPT: SINCRONIZAR (GET)
+============================================================ */
+async function sincronizarDesdeGoogle() {
+  if (!GOOGLE_SCRIPT_URL) {
+    showToast('⚠️ Configura GOOGLE_SCRIPT_URL primero', 'error');
+    return;
+  }
+  const statusEl = document.getElementById('syncStatus');
+  statusEl.textContent = 'Sincronizando...';
+  try {
+    const res = await fetch(GOOGLE_SCRIPT_URL + '?action=getAll', { method: 'GET' });
+    const data = await res.json();
+    if (Array.isArray(data)) {
+      saveData(data);
+      renderHistorial();
+      renderStats();
+      showToast(`☁️ ${data.length} registros cargados desde Drive`, 'success');
+      statusEl.textContent = '✓ Sincronizado';
+    } else {
+      showToast('❌ Formato de datos inesperado', 'error');
+      statusEl.textContent = '';
+    }
+  } catch (e) {
+    showToast('❌ Error al conectar con Google Drive', 'error');
+    statusEl.textContent = '';
+    console.error(e);
+  }
+}
+
+/* ============================================================
+   RENDER HISTORIAL
+============================================================ */
+function renderHistorial() {
+  const data = getData();
+  const container = document.getElementById('historialLista');
+  if (data.length === 0) {
+    container.innerHTML = '<p class="empty-msg">Aún no hay registros guardados.</p>';
+    return;
+  }
+  // Mostrar últimos 10 en orden descendente
+  const recent = [...data].reverse().slice(0, 10);
+  container.innerHTML = recent.map(r => {
+    const fecha = formatFechaLegible(r.fecha);
+    const exClass = r.ejercicio ? '' : ' no';
+    const exText  = r.ejercicio ? '🏃 Ejercicio' : 'Sin ejercicio';
+    return `
+      <div class="history-item">
+        <span class="h-date">${fecha}</span>
+        <span class="h-weight">${r.peso.toFixed(2)} kg</span>
+        <span class="h-ex${exClass}">${exText}</span>
+      </div>`;
+  }).join('');
+}
+
+function formatFechaLegible(str) {
+  const [y,m,d] = str.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+/* ============================================================
+   RENDER STATS
+============================================================ */
+function renderStats() {
+  const data = getData();
+
+  if (data.length === 0) {
+    document.getElementById('statsEmpty').style.display = 'block';
+    document.getElementById('statsContent').style.display = 'none';
+    if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+    return;
+  }
+  document.getElementById('statsEmpty').style.display = 'none';
+  document.getElementById('statsContent').style.display = 'block';
+
+  const ultimo = data[data.length - 1];
+  const peso = ultimo.peso;
+
+  // IMC
+  const imc = +(peso / (ALTURA * ALTURA)).toFixed(1);
+  document.getElementById('statPesoActual').textContent = peso.toFixed(2);
+  document.getElementById('statIMC').textContent = imc;
+
+  let imcCls = '', imcTxt = '';
+  if (imc >= 30)       { imcCls = 'imc-obesity'; imcTxt = 'Obesidad'; document.getElementById('imcBox').className = 'stat-box red'; }
+  else if (imc >= 25)  { imcCls = 'imc-sobre';   imcTxt = 'Sobrepeso'; document.getElementById('imcBox').className = 'stat-box yellow'; }
+  else                 { imcCls = 'imc-normal';   imcTxt = 'Normal'; document.getElementById('imcBox').className = 'stat-box green'; }
+  document.getElementById('imcBadge').className = 'imc-badge ' + imcCls;
+  document.getElementById('imcBadge').textContent = imcTxt;
+
+  // Kilos perdidos / restantes
+  const perdidos   = Math.max(0, +(PESO_INICIAL - peso).toFixed(2));
+  const restantes  = Math.max(0, +(peso - PESO_META).toFixed(2));
+  const totalMeta  = PESO_INICIAL - PESO_META; // 10
+  const pct        = Math.min(100, Math.round((perdidos / totalMeta) * 100));
+
+  document.getElementById('statPerdidos').textContent   = perdidos.toFixed(2);
+  document.getElementById('statRestantes').textContent  = restantes.toFixed(2);
+  document.getElementById('statPorcentaje').textContent = pct + '%';
+  document.getElementById('progressFill').style.width   = pct + '%';
+
+  // Ejercicio
+  const conEj = data.filter(r => r.ejercicio).length;
+  document.getElementById('statEjercicio').textContent = conEj;
+  document.getElementById('statEjercicioSub').textContent = `de ${data.length} registros`;
+
+  // Chart
+  renderChart(data);
+}
+
+/* ============================================================
+   CHART
+============================================================ */
+function renderChart(data) {
+  const labels  = data.map(r => { const [,m,d] = r.fecha.split('-'); return `${d}/${m}`; });
+  const valores = data.map(r => r.peso);
+
+  if (chartInstance) { chartInstance.destroy(); }
+
+  const ctx = document.getElementById('weightChart').getContext('2d');
+
+  const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+  gradient.addColorStop(0, 'rgba(61,142,240,0.28)');
+  gradient.addColorStop(1, 'rgba(61,142,240,0.01)');
+
+  chartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Peso (kg)',
+        data: valores,
+        borderColor: '#3d8ef0',
+        backgroundColor: gradient,
+        borderWidth: 2.5,
+        pointBackgroundColor: '#3d8ef0',
+        pointBorderColor: '#1a1d27',
+        pointBorderWidth: 2,
+        pointRadius: 4,
+        tension: 0.38,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#22263a',
+          borderColor: '#2e3248',
+          borderWidth: 1,
+          titleColor: '#8892b0',
+          bodyColor: '#e8eaf6',
+          padding: 12,
+          callbacks: {
+            label: ctx => ` ${ctx.parsed.y.toFixed(2)} kg`
+          }
         }
-    }
-
-    // Lógica de Pestañas
-    function switchTab(tabId) {
-        document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.getElementById(tabId).classList.add('active');
-        event.currentTarget.classList.add('active');
-
-        // Si entramos a estadísticas, verificamos si hay datos para mostrar
-        if (tabId === 'estadisticas' && historial.length > 0) {
-            document.getElementById('zonaEstadisticas').style.display = 'block';
-            actualizarEstadisticas();
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(46,50,72,0.6)' },
+          ticks: { color: '#8892b0', font: { family: 'DM Mono', size: 11 } }
+        },
+        y: {
+          min: PESO_META - 2,
+          max: PESO_INICIAL + 2,
+          grid: { color: 'rgba(46,50,72,0.6)' },
+          ticks: {
+            color: '#8892b0',
+            font: { family: 'DM Mono', size: 11 },
+            callback: v => v + ' kg'
+          }
         }
+      }
     }
+  });
+}
 
-    // Guardar en Navegador y en Drive
-    function guardarDatos() {
-        const fechaActual = new Date().toISOString().split('T')[0]; 
-        const peso = parseFloat(document.getElementById('pesoInput').value);
-        const ejercicio = document.getElementById('ejercicioInput').checked;
-        const msg = document.getElementById('msgAlerta');
+/* ============================================================
+   DIETA SEMANAL
+============================================================ */
+const DIETA = [
+  {
+    dia: 'Lunes',
+    carbos: '~55 g',
+    comidas: [
+      { label: '🍳 Desayuno (10:00)', text: 'Tortilla de 3 huevos con espinacas salteadas en mantequilla y queso curado rallado. Café negro o con leche de coco. Sin azúcar.' },
+      { label: '🥗 Almuerzo (13:30)', text: 'Ensalada de pollo a la plancha con aguacate, nueces, rúcula, aceitunas y AOVE. Acompañar con 3–4 galletas de arroz (fuente de carbos controlada).' },
+      { label: '🐟 Cena (17:30)', text: 'Salmón al horno con brócoli y coliflor al vapor con mantequilla y ajo. Opcional: ½ taza de arroz integral si el día fue de ejercicio.' }
+    ]
+  },
+  {
+    dia: 'Martes',
+    carbos: '~50 g',
+    comidas: [
+      { label: '🍳 Desayuno (10:00)', text: 'Huevos revueltos con bacon, champiñones y tomate cherry. Té verde o café. Sin pan.' },
+      { label: '🥗 Almuerzo (13:30)', text: 'Bowl de atún en aceite de oliva con aguacate, pepino, tomate y semillas de calabaza. Aliñar con limón y sal. Sin cereales.' },
+      { label: '🍗 Cena (17:30)', text: 'Pechuga de pollo al horno con judías verdes salteadas en AOVE y ajo. 100 g de batata asada como carbohidrato de calidad.' }
+    ]
+  },
+  {
+    dia: 'Miércoles',
+    carbos: '~60 g',
+    comidas: [
+      { label: '🥑 Desayuno (10:00)', text: 'Yogur griego entero (sin azúcar) con frutos rojos (frambuesas, arándanos) y nueces. Una cucharada de semillas de chía.' },
+      { label: '🥩 Almuerzo (13:30)', text: 'Hamburguesa de ternera sin pan, con queso cheddar, lechuga, tomate y mostaza. Ensalada verde de guarnición con AOVE.' },
+      { label: '🐠 Cena (17:30)', text: 'Merluza al horno con espárragos y pimientos asados. 80 g de quinoa cocida como fuente de carbo complejo y equilibrante.' }
+    ]
+  },
+  {
+    dia: 'Jueves',
+    carbos: '~45 g',
+    comidas: [
+      { label: '🍳 Desayuno (10:00)', text: 'Tortilla francesa con queso de cabra y orégano. Café con leche de almendras sin azúcar. Sin fruta ni pan.' },
+      { label: '🥗 Almuerzo (13:30)', text: 'Ensalada César keto: pollo a la plancha, bacon crujiente, lechuga romana, parmesano y aderezo César (sin crutones). Aguacate extra.' },
+      { label: '🥩 Cena (17:30)', text: 'Secreto ibérico a la plancha con brócoli al vapor y champiñones salteados con mantequilla. Sin carbohidratos extra (día bajo en carbos).' }
+    ]
+  },
+  {
+    dia: 'Viernes',
+    carbos: '~70 g',
+    comidas: [
+      { label: '🥑 Desayuno (10:00)', text: 'Tostada de pan de centeno (1 rebanada) con aguacate machacado, huevo pochado y sal en escamas. Café. Día de recarga moderada de carbos.' },
+      { label: '🐟 Almuerzo (13:30)', text: 'Sardinas en conserva sobre ensalada de espinacas, tomate, pepino y cebolla morada. Aliñar con AOVE y vinagre de manzana. 100 g de garbanzos cocidos.' },
+      { label: '🍗 Cena (17:30)', text: 'Muslos de pollo al horno con piel (grasa buena) con calabacín, berenjena y pimiento. 80 g de arroz basmati (índice glucémico medio-bajo).' }
+    ]
+  },
+  {
+    dia: 'Sábado',
+    carbos: '~65 g',
+    comidas: [
+      { label: '🍳 Desayuno (10:00)', text: 'Huevos benedictine keto: huevos escalfados sobre jamón serrano con salsa holandesa casera. Café con nata sin azúcar.' },
+      { label: '🥩 Almuerzo (13:30)', text: 'Entrecot de ternera a la plancha con ensalada de tomate, aguacate y queso feta. Aliñar con AOVE y orégano. Sin patatas.' },
+      { label: '🥗 Cena (17:30)', text: 'Wok de gambas con brócoli, bok choy, jengibre y salsa de soja baja en sal. 100 g de fideos de konjac (0 carbos) o 60 g de arroz integral si apetece. 🙂' }
+    ]
+  },
+  {
+    dia: 'Domingo',
+    carbos: '~60 g',
+    comidas: [
+      { label: '🥑 Desayuno (10:00)', text: 'Smoothie bowl keto: leche de coco + proteína de vainilla + frutos rojos congelados + semillas de lino. Nueces por encima.' },
+      { label: '🍗 Almuerzo (13:30)', text: 'Pollo asado entero con verduras al horno: calabacín, berenjena, pimiento y cebolla. 1 batata mediana asada como carbohidrato del día. ¡Disfrútalo! 🙂' },
+      { label: '🐟 Cena (17:30)', text: 'Sopa de miso con tofu firme, setas shiitake y algas wakame. Ligero y reconstituyente para cerrar la semana.' }
+    ]
+  }
+];
 
-        if(!peso || isNaN(peso)) {
-            msg.style.display = 'block';
-            msg.style.background = '#f8d7da'; msg.style.color = '#721c24';
-            msg.innerText = "⚠️ Por favor, introduce tu peso.";
-            return;
-        }
+function renderDieta() {
+  const container = document.getElementById('dietaDias');
+  container.innerHTML = DIETA.map((dia, i) => `
+    <div class="diet-day" style="margin-bottom:8px">
+      <div class="diet-day-header" id="dh${i}" onclick="toggleDia(${i})">
+        <h3>${dia.dia}</h3>
+        <span style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:.72rem;background:rgba(61,142,240,.12);color:#3d8ef0;padding:3px 9px;border-radius:99px;font-weight:600">${dia.carbos}</span>
+          <span class="chevron">▼</span>
+        </span>
+      </div>
+      <div class="diet-day-body" id="db${i}">
+        ${dia.comidas.map(c => `
+          <div class="meal-row">
+            <span class="meal-label">${c.label}</span>
+            <span class="meal-text">${c.text}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
 
-        // 1. Guardar en memoria local
-        historial.push({ fecha: fechaActual, peso: peso, ejercicio: ejercicio });
-        historial.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
-        localStorage.setItem('historialPedro', JSON.stringify(historial));
+  // Abrir el primer día por defecto
+  toggleDia(0);
+}
 
-        // Actualizamos la gráfica por si nos vamos a esa pestaña rápido
-        actualizarEstadisticas();
+function toggleDia(i) {
+  const header = document.getElementById('dh' + i);
+  const body   = document.getElementById('db' + i);
+  header.classList.toggle('open');
+  body.classList.toggle('open');
+}
 
-        msg.style.display = 'block';
-        msg.style.background = '#d4edda'; msg.style.color = '#155724';
-        msg.innerText = "⏳ Guardando datos y enviando a Drive...";
+/* ============================================================
+   TOAST
+============================================================ */
+let toastTimer = null;
+function showToast(msg, type = 'info') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'show ' + type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.className = ''; }, 3200);
+}
 
-        // 2. Enviar a Drive (copia de seguridad)
-        fetch(GOOGLE_SCRIPT_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            body: JSON.stringify({ fecha: fechaActual, peso: peso, ejercicio: ejercicio })
-        }).then(() => {
-            msg.innerText = "✅ ¡Guardado en local y en la nube!";
-            setTimeout(() => { 
-                msg.style.display = 'none'; 
-                document.getElementById('pesoInput').value = ''; 
-                document.getElementById('ejercicioInput').checked = false;
-            }, 3000);
-        }).catch(err => {
-            msg.innerText = "⚠️ Guardado en navegador, pero falló el envío a Drive.";
-        });
-    }
-
-    // Descargar de Drive (por si borras caché o cambias de PC)
-    function cargarDatosDesdeDrive() {
-        const btn = document.getElementById('btnSync');
-        btn.innerText = "⏳ Descargando datos...";
-        
-        fetch(GOOGLE_SCRIPT_URL)
-            .then(response => response.json())
-            .then(data => {
-                historial = data;
-                historial.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
-                
-                // Sobrescribimos la memoria local con los datos frescos de Drive
-                localStorage.setItem('historialPedro', JSON.stringify(historial));
-                
-                actualizarEstadisticas();
-                btn.innerText = "🔄 Sincronizar Datos con Drive";
-                document.getElementById('zonaEstadisticas').style.display = 'block';
-            })
-            .catch(error => {
-                console.error("Error:", error);
-                btn.innerText = "❌ Error. Reintentar Sincronización";
-                alert("No se pudieron cargar los datos. Verifica la URL de Google Script y los permisos.");
-            });
-    }
-
-    // Actualizar Gráfico
-    function actualizarEstadisticas() {
-        if(historial.length === 0) return;
-
-        const ultimoRegistro = historial[historial.length - 1];
-        const pesoActual = ultimoRegistro.peso;
-        const pesoInicial = 96.45;
-        const meta = 86.45;
-        
-        const imc = (pesoActual / (1.81 * 1.81)).toFixed(1);
-        let estadoFisico = "";
-        if(imc >= 30) estadoFisico = "🔴 Obesidad";
-        else if(imc >= 25) estadoFisico = "🟠 Sobrepeso";
-        else estadoFisico = "🟢 Peso Normal";
-
-        document.getElementById('imcText').innerText = `${imc} - ${estadoFisico}`;
-        document.getElementById('perdidaText').innerText = (pesoInicial - pesoActual).toFixed(2) + " kg";
-        document.getElementById('restanteText').innerText = (pesoActual - meta).toFixed(2) + " kg";
-
-        const fechas = historial.map(h => {
-            let parts = h.fecha.split('-');
-            return parts.length === 3 ? `${parts[1]}/${parts[2]}` : h.fecha; 
-        });
-        const pesos = historial.map(h => h.peso);
-
-        if(chartInstance) chartInstance.destroy();
-        const ctx = document.getElementById('graficoPeso').getContext('2d');
-        chartInstance = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: fechas,
-                datasets: [{
-                    label: 'Mi Peso (kg)',
-                    data: pesos,
-                    borderColor: '#3498db',
-                    backgroundColor: 'rgba(52, 152, 219, 0.2)',
-                    borderWidth: 3,
-                    fill: true,
-                    tension: 0.3
-                }]
-            },
-            options: { scales: { y: { min: meta - 2, max: pesoInicial + 2 } } }
-        });
-    }
+/* ============================================================
+   INICIALIZAR estado del checkbox
+============================================================ */
+document.getElementById('checkBoxVisual').style.opacity = '0.3';
 </script>
 </body>
 </html>
